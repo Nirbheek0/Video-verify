@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenTika Clone - PDF Verification</title>
+    <title>GreenTika Clone - PDF Verification & Preview</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"></script>
@@ -13,10 +13,10 @@
         <!-- State 1: Disclaimer -->
         <section id="disclaimer-screen" class="screen active">
             <h1>Verify DSC-Signed PDFs</h1>
-            <p>Your PDF stays entirely in your browser. All verification runs 100% client-side via JavaScript.</p>
+            <p>100% Client-side execution in your browser. No server uploads.</p>
             <div class="terms">
                 <input type="checkbox" id="agree-checkbox">
-                <label for="agree-checkbox">I have read and accept the terms.</label>
+                <label for="agree-checkbox">I accept the terms and local processing.</label>
             </div>
             <button id="btn-proceed" disabled>Proceed to Upload</button>
         </section>
@@ -41,7 +41,7 @@
             </div>
         </section>
 
-        <!-- State 4: Result -->
+        <!-- State 4: Result & Preview -->
         <section id="result-screen" class="screen">
             <div id="verification-status" class="status-card">
                 <div class="icon-container">
@@ -50,7 +50,17 @@
                 </div>
                 <h2 id="result-title">Verifying...</h2>
                 <p id="result-details"></p>
-                <button id="btn-reset">Verify Another Document</button>
+                
+                <!-- PDF Preview Canvas Container -->
+                <div id="pdf-preview-container" class="preview-box hidden">
+                    <h3>Document Preview (Page 1)</h3>
+                    <canvas id="pdf-canvas"></canvas>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="btn-download" class="hidden">Download PDF</button>
+                    <button id="btn-reset">Verify Another Document</button>
+                </div>
             </div>
         </section>
     </main>

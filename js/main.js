@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const verifier = new CryptoVerifier();
     let currentFileBuffer = null;
+    let currentFileName = "document.pdf";
 
     const screens = {
         disclaimer: document.getElementById('disclaimer-screen'),
@@ -22,10 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fileInput = document.getElementById('pdf-upload');
 
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        currentFileName = file.name;
         showResult(true, "Reading File...", "Loading PDF into memory...");
         
         const reader = new FileReader();
@@ -56,6 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
         switchScreen('upload');
     });
 
+    document.getElementById('btn-download').addEventListener('click', () => {
+        if (!currentFileBuffer) return;
+        const blob = new Blob([currentFileBuffer], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
     async function processFile(buffer, password = null) {
         try {
             const auth = await verifier.checkPasswordRequirement(buffer, password);
@@ -67,13 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             modal.classList.remove('active');
-            showResult(true, "Processing...", "Extracting cryptographic signature...");
+            showResult(true, "Processing...", "Extracting signature and rendering preview...");
             
-            // Small timeout to allow UI to render processing state smoothly
             setTimeout(async () => {
                 try {
-                    const result = await verifier.verifySignature(buffer);
+                    const result = await verifier.verifySignature(buffer, password);
                     showResult(true, "Signature Valid", `Signed by: ${result.signerName}`);
+                    renderPdfPreview(result.pdfDoc);
+                    document.getElementById('btn-download').classList.remove('hidden');
                 } catch (err) {
                     showResult(false, "Verification Failed", err.message);
                 }
@@ -82,6 +98,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             modal.classList.remove('active');
             showResult(false, "Error", error.message);
+        }
+    }
+
+    async function renderPdfPreview(pdfDoc) {
+        try {
+            const page = await pdfDoc.getPage(1);
+            const viewport = page.getViewport({ scale: 1.0 });
+            const canvas = document.getElementById('pdf-canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+            document.getElementById('pdf-preview-container').classList.remove('hidden');
+        } catch (e) {
+            console.error("Preview render failed", e);
         }
     }
 
@@ -108,5 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
         titleEl.style.color = isProcessing ? 'var(--md-sys-color-on-surface)' : (isSuccess ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)');
         
         document.getElementById('result-details').textContent = details;
+        if (isProcessing) {
+            document.getElementById('pdf-preview-container').classList.add('hidden');
+            document.getElementById('btn-download').classList.add('hidden');
+        }
     }
 });

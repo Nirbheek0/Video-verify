@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const verifier = new CryptoVerifier();
     let currentFileBuffer = null;
 
-    // UI Elements
     const screens = {
         disclaimer: document.getElementById('disclaimer-screen'),
         upload: document.getElementById('upload-screen'),
@@ -10,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const modal = document.getElementById('password-modal');
     
-    // Disclaimer Logic
     const cbAgree = document.getElementById('agree-checkbox');
     const btnProceed = document.getElementById('btn-proceed');
     
@@ -22,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
         switchScreen('upload');
     });
 
-    // Upload Logic
     const btnUpload = document.getElementById('btn-upload');
     const fileInput = document.getElementById('pdf-upload');
 
@@ -40,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsArrayBuffer(file);
     });
 
-    // Password Logic
     const btnVerifyPwd = document.getElementById('btn-verify-password');
     const inputPwd = document.getElementById('pdf-password');
 
@@ -49,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await processFile(currentFileBuffer, pwd);
     });
 
-    // Reset Logic
     document.getElementById('btn-reset').addEventListener('click', () => {
         fileInput.value = '';
         currentFileBuffer = null;
@@ -57,10 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         switchScreen('upload');
     });
 
-    // Core Processing Flow
     async function processFile(buffer, password = null) {
         try {
-            // 1. Check if password is correct/needed
             const auth = await verifier.checkPasswordRequirement(buffer, password);
             
             if (auth.requiresPassword) {
@@ -69,10 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // Unlocked successfully
             modal.classList.remove('active');
+            showResult(true, "Processing...", "Analyzing cryptographic signature...");
             
-            // 2. Perform Cryptographic check
             const result = await verifier.verifySignature(buffer);
             
             showResult(true, "Signature Valid", `Signed by: ${result.signerName}`);
@@ -83,19 +75,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // UI Helpers
     function switchScreen(screenName) {
         Object.values(screens).forEach(s => s.classList.remove('active'));
-        screens[screenName].classList.active ? null : screens[screenName].classList.add('active');
+        screens[screenName].classList.add('active');
     }
 
     function showResult(isSuccess, title, details) {
         switchScreen('result');
-        document.getElementById('success-icon').classList.toggle('hidden', !isSuccess);
-        document.getElementById('error-icon').classList.toggle('hidden', isSuccess);
+        const isProcessing = title === "Processing...";
         
-        document.getElementById('result-title').textContent = title;
-        document.getElementById('result-title').style.color = isSuccess ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)';
+        document.getElementById('success-icon').classList.toggle('hidden', !isSuccess || isProcessing);
+        document.getElementById('error-icon').classList.toggle('hidden', isSuccess || isProcessing);
+        
+        const titleEl = document.getElementById('result-title');
+        titleEl.textContent = title;
+        titleEl.style.color = isProcessing ? 'var(--md-sys-color-on-surface)' : (isSuccess ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)');
+        
         document.getElementById('result-details').textContent = details;
     }
 });

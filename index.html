@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenTika Clone - PDF Verification</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- PDF.js for parsing and password handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- Forge for cryptographic PKCS#7 signature verification -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"></script>
+</head>
+<body>
+    <main class="app-container">
+        <!-- State 1: Disclaimer -->
+        <section id="disclaimer-screen" class="screen active">
+            <h1>Verify DSC-Signed PDFs</h1>
+            <p>Your PDF stays entirely in your browser. All verification runs 100% client-side. No data is sent to any server.</p>
+            <div class="terms">
+                <input type="checkbox" id="agree-checkbox">
+                <label for="agree-checkbox">I have read and accept the terms. I understand this runs locally.</label>
+            </div>
+            <button id="btn-proceed" disabled>Proceed to Upload</button>
+        </section>
+
+        <!-- State 2: Upload -->
+        <section id="upload-screen" class="screen hidden">
+            <h2>Upload Document</h2>
+            <p>Upload e-Aadhaar, e-PAN, or ITR-V</p>
+            <div class="upload-area" id="drop-zone">
+                <input type="file" id="pdf-upload" accept="application/pdf" hidden>
+                <button id="btn-upload">Select PDF File</button>
+            </div>
+        </section>
+
+        <!-- State 3: Password Modal -->
+        <section id="password-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Document is Password Protected</h3>
+                <p>Enter password (e.g., e-Aadhaar: First 4 letters of name + YYYY)</p>
+                <input type="password" id="pdf-password" placeholder="Password">
+                <button id="btn-verify-password">Unlock & Verify</button>
+            </div>
+        </section>
+
+        <!-- State 4: Result -->
+        <section id="result-screen" class="screen hidden">
+            <div id="verification-status" class="status-card">
+                <div class="icon-container">
+                    <svg id="success-icon" class="hidden" viewBox="0 0 24 24" fill="green"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <svg id="error-icon" class="hidden" viewBox="0 0 24 24" fill="red"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </div>
+                <h2 id="result-title">Verifying...</h2>
+                <p id="result-details"></p>
+                <button id="btn-reset">Verify Another Document</button>
+            </div>
+        </section>
+    </main>
+    <script src="js/crypto_verifier.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
